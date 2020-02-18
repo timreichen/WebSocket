@@ -31,7 +31,8 @@ function createClient(path: string) {
 		close: () => {
 			if (ws.readyState === WebSocket.CLOSED) { return }
 			ws.close()
-		}
+		},
+		isClosed: () => ws.readyState === WebSocket.CLOSED
 	})
 	ws.addEventListener("message", event => client.onmessage(event.data))
 	ws.addEventListener("open", () => client.onopen())

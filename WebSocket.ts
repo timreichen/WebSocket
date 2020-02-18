@@ -6,6 +6,7 @@ import { coder, Coder } from "https://raw.githubusercontent.com/timreichen/Coder
 interface WebSocketInit {
 	send: Function
 	close: Function
+	isClosed: Function
 }
 
 // reserved name for event to send callback data
@@ -93,6 +94,7 @@ export class WebSocket extends Emitter {
 	// send data to external client
 	async emit(name: string, data?: any) {
 		if (name === ACK_NAME) { return console.warn(`'${ACK_NAME}' can not be used as a name for emit`) }
+		if (this.options.isClosed()) { return console.warn(`emit failed: websocket conncetion is closed`) }
 		return new Promise((resolve, reject) => {
 			const id = this.generateId()
 			const pack = this.pack(name, id, { data })
@@ -120,6 +122,7 @@ export class WebSocket extends Emitter {
 	}
 
 	close() {
+		if (this.options.isClosed()) { return console.warn(`websocket is already closed`) }
 		this.options.close()
 	}
 

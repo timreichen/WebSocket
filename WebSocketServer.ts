@@ -24,7 +24,8 @@ export class WebSocketServer extends Emitter {
 				send: data => {
 					if (ws.isClosed) { return }
 					ws.send(new Uint8Array(data))
-				}
+				},
+				isClosed: () => ws.isClosed
 			})
 			this.emit("open", websocket)
 			for await (const event of ws.receive()) {
