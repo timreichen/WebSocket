@@ -8,6 +8,9 @@ interface WebSocketInit {
 	close: Function
 	isClosed: Function
 }
+interface WebSocketOptions {
+	callbackTimeout: number
+}
 
 // reserved name for event to send callback data
 const ACK_NAME = "__ACK_NAME__"
@@ -15,12 +18,14 @@ const ACK_NAME = "__ACK_NAME__"
 // this.emit -> send to external client
 // super.emit -> emit data to internal client
 export class WebSocket extends Emitter {	
+	init: any
 	options: any
 	callbacks: Map<number, Function>
 	coder: Coder
-	constructor(options: WebSocketInit) {
+	constructor(init: WebSocketInit, options: WebSocketOptions= {callbackTimeout: 60000}) {
 		super()
 		this.coder = coder
+		this.init = init
 		this.options = options
 		this.callbacks = new Map()
 	}
@@ -94,7 +99,7 @@ export class WebSocket extends Emitter {
 	// send data to external client
 	async emit(name: string, data?: any) {
 		if (name === ACK_NAME) { return console.warn(`'${ACK_NAME}' can not be used as a name for emit`) }
-		if (this.options.isClosed()) { return console.warn(`emit failed: websocket conncetion is closed`) }
+		if (this.init.isClosed()) { throw Error(`emit failed: websocket conncetion is closed`) }
 		return new Promise((resolve, reject) => {
 			const id = this.generateId()
 			const pack = this.pack(name, id, { data })
@@ -108,22 +113,22 @@ export class WebSocket extends Emitter {
 			setTimeout(() => {
 				callback(`emit '${name}' with id '${id}' timeout error`)
 				this.callbacks.delete(id)
-			}, 5000) // if callback is not called after 5000ms throw error and delete callback
+			}, this.options.callbackTimeout) // if callback is not called after 60s throw error and delete callback
 
 		})
 	}
 
 	private send(pack) {
 		try {
-			this.options.send(pack)
+			this.init.send(pack)
 		} catch (error) {
 			console.error(error)
 		}
 	}
 
 	close() {
-		if (this.options.isClosed()) { return console.warn(`websocket is already closed`) }
-		this.options.close()
+		if (this.init.isClosed()) { return console.warn(`websocket is already closed`) }
+		this.init.close()
 	}
 
 }
