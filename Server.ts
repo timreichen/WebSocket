@@ -1,15 +1,22 @@
 import { green, blue, yellow, red } from "https://deno.land/std/fmt/colors.ts"
-import { Server as HTTPServer } from "https://deno.land/std/http/server.ts"
+import { serve as httpServe, Server as HTTPServer, HTTPOptions } from "https://deno.land/std/http/server.ts"
+
 import { acceptWebSocket, isWebSocketCloseEvent } from "https://deno.land/std/ws/mod.ts"
 import { Wrapper } from "./Wrapper.ts"
 import Emitter from "./Emitter.ts"
+
+export function serve(addr: string | HTTPOptions): Server {
+	const server = httpServe(addr)
+	const wss = new Server(server)
+	return wss
+}
 
 export class Server extends Emitter {
 	constructor(server: HTTPServer) {
 		super()
 		this.connect(server)
 	}
-	async connect(server) {
+	private async connect(server) {
 		for await (const req of server) {
 			const ws = await this.connectWebSocket(req)
 			const init = {
