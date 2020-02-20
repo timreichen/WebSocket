@@ -12,7 +12,7 @@ export class Server extends Emitter {
 	async connect(server) {
 		for await (const req of server) {
 			const ws = await this.connectWebSocket(req)
-			const websocket = new Wrapper({
+			const init = {
 				close: (code, reason?) => {
 					try {
 						if (ws.isClosed) { return }
@@ -26,7 +26,9 @@ export class Server extends Emitter {
 					ws.send(new Uint8Array(data))
 				},
 				isClosed: () => ws.isClosed
-			})
+			}
+			const websocket = new Wrapper()
+			websocket.connect(init)
 			this.emit("open", websocket)
 			for await (const event of ws.receive()) {
 				if (event instanceof Uint8Array) {

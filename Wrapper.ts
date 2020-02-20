@@ -21,12 +21,15 @@ export class Wrapper extends Emitter {
 	options: WrapperOptions
 	private callbacks: Map<number, Function>
 	coder: Coder
-	constructor(init: WrapperInit, options: WrapperOptions= {callbackTimeout: 60000}) {
+	constructor(options: WrapperOptions={callbackTimeout: 60000}) {
 		super()
 		this.coder = coder
-		this.init = init
 		this.options = options
 		this.callbacks = new Map()
+	}
+
+	connect(init: WrapperInit) {
+		this.init = init
 	}
 
 	// receive data from external client
@@ -98,6 +101,7 @@ export class Wrapper extends Emitter {
 	// send data to external client
 	async emit(name: string, data?: any) {
 		if (name === ACK_NAME) { return console.warn(`'${ACK_NAME}' can not be used as a name for emit`) }
+		
 		if (this.init.isClosed()) { throw Error(`emit failed: Wrapper conncetion is closed`) }
 		return new Promise((resolve, reject) => {
 			const id = this.generateId()

@@ -8,11 +8,7 @@ export class Client extends Wrapper {
 	private path: string
 	private protocols: string | string[]
 	constructor(path: string, protocols?: string | string[]) {
-		super({
-			send: () => {},
-			close: () => {},
-			isClosed: () => { return true },
-		})
+		super()
 		this.path = path
 		this.protocols = protocols
 		this.newConnection(this.path, this.protocols)
@@ -31,17 +27,18 @@ export class Client extends Wrapper {
 			},
 			isClosed: () => ws.readyState === WebSocket.CLOSED
 		}
+		this.connect(init)
 		ws.binaryType = "arraybuffer"
-		ws.addEventListener("message", event => super.onmessage(event.data))
-		ws.addEventListener("open", () => super.onopen())
-		ws.addEventListener("close", event => super.onclose(event))
-		ws.addEventListener("error", error => super.onerror(error))
+		ws.addEventListener("message", event => this.onmessage(event.data))
+		ws.addEventListener("open", () => this.onopen())
+		ws.addEventListener("close", event => this.onclose(event))
+		ws.addEventListener("error", error => this.onerror(error))
 	}
 
 	reconnect(timeout = 1000) {
 		return new Promise((resolve, reject) => {
 			setTimeout(() => {
-				if (super.init.isClosed()) {
+				if (this.init.isClosed()) {
 					this.reconnect(timeout)
 				} else {
 					// success
