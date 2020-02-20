@@ -1,10 +1,12 @@
-import { Wrapper } from "https://raw.githubusercontent.com/timreichen/WebSocket/master/Wrapper.ts"
+import { Wrapper } from "./Wrapper.ts"
 
 /// <reference lib="https://raw.githubusercontent.com/microsoft/TypeScript/master/lib/lib.dom.d.ts" />
 
+declare var WebSocket: any
+
 export class Client extends Wrapper {
-	path: string
-	protocols: string | string[]
+	private path: string
+	private protocols: string | string[]
 	constructor(path: string, protocols?: string | string[]) {
 		super({
 			send: () => {},
@@ -15,6 +17,7 @@ export class Client extends Wrapper {
 		this.protocols = protocols
 		this.newConnection(this.path, this.protocols)
 	}
+
 	private newConnection(path: string, protocols?: string | string[]) {
 		const ws = new WebSocket(path, protocols)
 		const init = {
@@ -29,17 +32,24 @@ export class Client extends Wrapper {
 			isClosed: () => ws.readyState === WebSocket.CLOSED
 		}
 		ws.binaryType = "arraybuffer"
-		ws.addEventListener("message", event => this.onmessage(event.data))
-		ws.addEventListener("open", () => this.onopen())
-		ws.addEventListener("close", event => this.onclose(event))
-		ws.addEventListener("error", error => this.onerror(error))
+		ws.addEventListener("message", event => super.onmessage(event.data))
+		ws.addEventListener("open", () => super.onopen())
+		ws.addEventListener("close", event => super.onclose(event))
+		ws.addEventListener("error", error => super.onerror(error))
 	}
+
 	reconnect(timeout = 1000) {
-		setTimeout(() => {
-			if (this.init.isClosed()) {
-				this.reconnect(timeout)
-			}
-		}, timeout)
-		this.newConnection(this.path, this.protocols)
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				if (super.init.isClosed()) {
+					this.reconnect(timeout)
+				} else {
+					// success
+					resolve()
+				}
+			}, timeout)
+			this.newConnection(this.path, this.protocols)
+		})
 	}
+
 }
