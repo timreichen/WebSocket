@@ -1,17 +1,19 @@
 import { Wrapper } from "https://raw.githubusercontent.com/timreichen/WebSocket/master/Wrapper.ts"
 
+declare type WebSocket = any
+
 export class Client extends Wrapper {
 	path: string
 	protocols: string | string[]
-	constructor(path: string, protocols?: string | string[]) {
-		super()
+	constructor(path: string, protocols?: string | string[]) {
+		const { ws, init } = Client.newConnection(path, protocols)
+		super(init)
 		this.path = path
 		this.protocols = protocols
-		this.newConnection(this.path, this.protocols)
 	}
-	private newConnection(path: string, protocols?: string | string[]) {
+	private static newConnection(path: string, protocols?: string | string[]) {
 		const ws = new WebSocket(path, protocols)
-		const options = {
+		const init = {
 			send: data => {
 				if (ws.readyState === WebSocket.CLOSED) { return }
 				ws.send(data)
@@ -27,12 +29,12 @@ export class Client extends Wrapper {
 		ws.addEventListener("close", event => this.onclose(event))
 		ws.addEventListener("error", error => this.onerror(error))
 		ws.binaryType = "arraybuffer"
-		this.options = options
+		return { ws, init }
 	}
-	reconnect(timeout=1000) {
+	reconnect(timeout = 1000) {
 		setTimeout(() => {
 			if (this.init.isClosed()) {
-				this.reconnect(timeout)	
+				this.reconnect(timeout)
 			}
 		}, timeout)
 		this.newConnection(this.path, this.protocols)

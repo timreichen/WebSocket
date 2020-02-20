@@ -18,31 +18,9 @@ Because the data gets encoded and decoded Coder, you can send any kind of data y
 ```typescript
 // Client
 
-import { WebSocket as Client } from "https://raw.githubusercontent.com/timreichen/Coder/master/WebSocket.ts"
+import { Client } from "https://raw.githubusercontent.com/timreichen/Coder/master/Client.ts"
 
-// map events to wrapper
-function createClient(path: string) {
-	const ws = new WebSocket(path)
-	const client = new Client({
-		send: data => {
-			if (ws.readyState === WebSocket.CLOSED) { return }
-			ws.send(data)
-		},
-		close: () => {
-			if (ws.readyState === WebSocket.CLOSED) { return }
-			ws.close()
-		},
-		isClosed: () => ws.readyState === WebSocket.CLOSED
-	})
-	ws.addEventListener("message", event => client.onmessage(event.data))
-	ws.addEventListener("open", () => client.onopen())
-	ws.addEventListener("close", event => client.onclose(event))
-	ws.addEventListener("error", error => client.onerror(error))
-	ws.binaryType = "arraybuffer"
-	return client
-}
-
-const client = createClient("ws://localhost:1234")
+const client = new Client("ws://localhost:1234")
 
 client.on("open", async () => {
     const data = await client.emit("hello", "hello server") // sends hello event with data and waits for the return value
