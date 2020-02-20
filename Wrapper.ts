@@ -15,12 +15,13 @@ interface WrapperOptions {
 const ACK_NAME = "__ACK_NAME__"
 
 // this.emit -> send to external client
-// super.emit -> emit data to internal client
+// this._emit -> emit data to internal client
 export class Wrapper extends Emitter {	
 	init: WrapperInit
 	options: WrapperOptions
 	private callbacks: Map<number, Function>
 	coder: Coder
+	private initial: boolean
 	constructor(options: WrapperOptions={callbackTimeout: 60000}) {
 		super()
 		this.coder = coder
@@ -32,6 +33,10 @@ export class Wrapper extends Emitter {
 		this.init = init
 	}
 
+	_emit(name: string, ...args) {
+		return super.emit(name, ...args)
+	}
+
 	// receive data from external client
 	onmessage(pack) {
 		const { name, id, pkg } = this.unpack(pack)
@@ -41,20 +46,20 @@ export class Wrapper extends Emitter {
 			if (!callback) { return console.error(`callback with id '${id}' not found`) }
 			callback(error, data)
 		} else {
-			super.emit(name, { id, data })
+			this._emit(name, { id, data })
 		}
 	}
 
 	onopen() {
-		super.emit("open", { id: null })
+		this._emit("open", { id: null })
 	}
 	onclose(event) {
-		super.emit("close", { id: null, data: event })
-		// this.close()
+		this._emit("close", { id: null, data: event })
+		this.close()
 	}
 	onerror(error) {
-		super.emit("error", { id: null, data: error })
-		// this.close()
+		this._emit("error", { id: null, data: error })
+		this.close()
 	}
 
 	// unpack received data from external client
