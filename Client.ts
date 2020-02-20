@@ -37,6 +37,7 @@ export class Client extends Wrapper {
 
 	reconnect(timeout = 1000) {
 		return new Promise((resolve, reject) => {
+			this.newConnection(this.path, this.protocols)
 			setTimeout(() => {
 				if (this.init.isClosed()) {
 					this.reconnect(timeout)
@@ -45,7 +46,6 @@ export class Client extends Wrapper {
 					resolve()
 				}
 			}, timeout)
-			this.newConnection(this.path, this.protocols)
 		})
 	}
 
