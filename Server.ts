@@ -5,12 +5,6 @@ import { acceptWebSocket, isWebSocketCloseEvent } from "https://deno.land/std/ws
 import { Wrapper } from "./Wrapper.ts"
 import Emitter from "./Emitter.ts"
 
-export function serve(addr: string | HTTPOptions): Server {
-	const server = httpServe(addr)
-	const wss = new Server(server)
-	return wss
-}
-
 export class Server extends Emitter {
 	constructor(server: HTTPServer) {
 		super()
