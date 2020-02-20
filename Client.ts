@@ -25,7 +25,7 @@ export class Client extends Wrapper {
 				if (ws.readyState === WebSocket.CLOSED) { return }
 				ws.close()
 			},
-			isClosed: () => ws.readyState === WebSocket.CLOSED
+			isOpen: () => ws.readyState === WebSocket.OPEN
 		}
 		this.connect(init)
 		ws.binaryType = "arraybuffer"
@@ -39,8 +39,9 @@ export class Client extends Wrapper {
 		return new Promise((resolve, reject) => {
 			this.newConnection(this.path, this.protocols)
 			setTimeout(() => {
-				if (this.init.isClosed()) {
+				if (this.init.isOpen()) {
 					this.reconnect(timeout)
+					.then(resolve)
 				} else {
 					// success
 					resolve()

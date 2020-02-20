@@ -26,7 +26,7 @@ export class Server extends Emitter {
 					if (ws.isClosed) { return }
 					ws.send(new Uint8Array(data))
 				},
-				isClosed: () => ws.isClosed
+				isOpen: () => !ws.isClosed
 			}
 			const websocket = new Wrapper()
 			websocket.connect(init)

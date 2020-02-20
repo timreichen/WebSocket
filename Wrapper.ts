@@ -5,7 +5,7 @@ import { coder, Coder } from "https://raw.githubusercontent.com/timreichen/Coder
 interface WrapperInit {
 	send: Function
 	close: Function
-	isClosed: Function
+	isOpen: Function
 }
 interface WrapperOptions {
 	callbackTimeout: number
@@ -50,11 +50,11 @@ export class Wrapper extends Emitter {
 	}
 	onclose(event) {
 		super.emit("close", { id: null, data: event })
-		this.close()
+		// this.close()
 	}
 	onerror(error) {
 		super.emit("error", { id: null, data: error })
-		this.close()
+		// this.close()
 	}
 
 	// unpack received data from external client
@@ -102,7 +102,7 @@ export class Wrapper extends Emitter {
 	async emit(name: string, data?: any) {
 		if (name === ACK_NAME) { return console.warn(`'${ACK_NAME}' can not be used as a name for emit`) }
 		
-		if (this.init.isClosed()) { throw Error(`emit failed: Wrapper conncetion is closed`) }
+		if (!this.init.isOpen()) { throw Error(`emit failed: Wrapper conncetion is closed`) }
 		return new Promise((resolve, reject) => {
 			const id = this.generateId()
 			const pack = this.pack(name, id, { data })
@@ -130,7 +130,7 @@ export class Wrapper extends Emitter {
 	}
 
 	close() {
-		if (this.init.isClosed()) { return console.warn(`websocket is already closed`) }
+		if (!this.init.isOpen()) { return console.warn(`websocket is already closed`) }
 		this.init.close()
 	}
 
