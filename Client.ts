@@ -37,6 +37,6 @@ export class Client extends Wrapper {
 				this.reconnect(timeout)
 			}
 		}, timeout)
-		this.newConnection(this.path, this.protocols)
+		Client.newConnection(this.path, this.protocols)
 	}
 }
