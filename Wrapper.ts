@@ -1,14 +1,13 @@
-
 // needs custom emitter which listener values can return values
 import Emitter from "./Emitter.ts"
 import { coder, Coder } from "https://raw.githubusercontent.com/timreichen/Coder/master/mod.ts"
 
-interface WebSocketInit {
+interface WrapperInit {
 	send: Function
 	close: Function
 	isClosed: Function
 }
-interface WebSocketOptions {
+interface WrapperOptions {
 	callbackTimeout: number
 }
 
@@ -17,12 +16,12 @@ const ACK_NAME = "__ACK_NAME__"
 
 // this.emit -> send to external client
 // super.emit -> emit data to internal client
-export class WebSocket extends Emitter {	
-	init: any
-	options: any
-	callbacks: Map<number, Function>
+export class Wrapper extends Emitter {	
+	init: WrapperInit
+	options: WrapperOptions
+	private callbacks: Map<number, Function>
 	coder: Coder
-	constructor(init: WebSocketInit, options: WebSocketOptions= {callbackTimeout: 60000}) {
+	constructor(init: WrapperInit, options: WrapperOptions= {callbackTimeout: 60000}) {
 		super()
 		this.coder = coder
 		this.init = init
@@ -99,7 +98,7 @@ export class WebSocket extends Emitter {
 	// send data to external client
 	async emit(name: string, data?: any) {
 		if (name === ACK_NAME) { return console.warn(`'${ACK_NAME}' can not be used as a name for emit`) }
-		if (this.init.isClosed()) { throw Error(`emit failed: websocket conncetion is closed`) }
+		if (this.init.isClosed()) { throw Error(`emit failed: Wrapper conncetion is closed`) }
 		return new Promise((resolve, reject) => {
 			const id = this.generateId()
 			const pack = this.pack(name, id, { data })
