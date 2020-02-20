@@ -1,2 +1,2 @@
-export { WebSocket } from "./WebSocket.ts"
-export { WebSocketServer } from "./WebSocketServer.ts"
+export { Wrapper } from "./Wrapper.ts"
+export { Server } from "./Server.ts"

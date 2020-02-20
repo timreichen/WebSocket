@@ -1,18 +1,18 @@
 import { green, blue, yellow, red } from "https://deno.land/std/fmt/colors.ts"
-import { Server } from "https://deno.land/std/http/server.ts"
+import { Server as HTTPServer } from "https://deno.land/std/http/server.ts"
 import { acceptWebSocket, isWebSocketCloseEvent } from "https://deno.land/std/ws/mod.ts"
-import { WebSocket } from "./WebSocket.ts"
+import { Wrapper } from "./Wrapper.ts"
 import Emitter from "./Emitter.ts"
 
-export class WebSocketServer extends Emitter {
-	constructor(server: Server) {
+export class Server extends Emitter {
+	constructor(server: HTTPServer) {
 		super()
 		this.connect(server)
 	}
 	async connect(server) {
 		for await (const req of server) {
 			const ws = await this.connectWebSocket(req)
-			const websocket = new WebSocket({
+			const websocket = new Wrapper({
 				close: (code, reason?) => {
 					try {
 						if (ws.isClosed) { return }
