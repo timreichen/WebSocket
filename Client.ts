@@ -1,6 +1,6 @@
 import { Wrapper } from "https://raw.githubusercontent.com/timreichen/WebSocket/master/Wrapper.ts"
 
-class Client extends Wrapper {
+export class Client extends Wrapper {
 	path: string
 	protocols: string | string[]
 	constructor(path: string, protocols?: string | string[]) {
