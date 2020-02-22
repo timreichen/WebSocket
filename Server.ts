@@ -14,15 +14,15 @@ export class Server extends Emitter {
 		for await (const req of server) {
 			try {
 				const ws = await this.connectWebSocket(req)
-				const init = {
-					close: (code: any, reason?: string) => {
-						try {
-							if (ws.isClosed) { return }
-							ws.close(code, reason)
-						} catch (error) {
-							console.error(red(error))
-						}
-					},
+			const init = {
+				close: (code: any, reason?: string) => {
+					try {
+						if (ws.isClosed) { return }
+						ws.close(code, reason)
+					} catch (error) {
+						console.error(red(error))
+					}
+				},
 				send: (data: any) => {
 					if (ws.isClosed) { return }
 					ws.send(new Uint8Array(data))
