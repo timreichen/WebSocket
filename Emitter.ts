@@ -10,7 +10,7 @@ export default class Emitter {
     if (listeners.includes(listener)) { return /*console.warn(`listener is already registered`)*/ }
     /* if once is insert middleware that removes listener after call */
     if (options.once) {
-      listener = (...args) => {
+      listener = (...args: any[]) => {
         const result = listener(...args)
         this.off(name, listener)
         return result
