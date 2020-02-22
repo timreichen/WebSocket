@@ -11,6 +11,8 @@ interface WrapperOptions {
 	callbackTimeout: number
 }
 
+type Package = { name: string, id: number, pkg: { data?: any, error?: any } }
+
 // reserved name for event to send callback data
 const ACK_NAME = "__ACK_NAME__"
 
@@ -21,9 +23,13 @@ export class Wrapper extends Emitter {
 	options: WrapperOptions
 	private callbacks: Map<number, Function>
 	coder: Coder
-	private initial: boolean
 	constructor(options: WrapperOptions={callbackTimeout: 60000}) {
 		super()
+		this.init = {
+			send: () => {},
+			close: () => {},
+			isOpen: () => false
+		}
 		this.coder = coder
 		this.options = options
 		this.callbacks = new Map()
@@ -33,12 +39,12 @@ export class Wrapper extends Emitter {
 		this.init = init
 	}
 
-	_emit(name: string, ...args) {
+	_emit(name: string, ...args: any[]) {
 		return super.emit(name, ...args)
 	}
 
 	// receive data from external client
-	onmessage(pack) {
+	onmessage(pack: ArrayBuffer) {
 		const { name, id, pkg } = this.unpack(pack)
 		const { data, error } = pkg
 		if (name === ACK_NAME) {
@@ -53,21 +59,21 @@ export class Wrapper extends Emitter {
 	onopen() {
 		this._emit("open", { id: null })
 	}
-	onclose(event) {
+	onclose(event: any) {
 		this._emit("close", { id: null, data: event })
 		this.close()
 	}
-	onerror(error) {
+	onerror(error: any) {
 		this._emit("error", { id: null, data: error })
 		this.close()
 	}
 
 	// unpack received data from external client
-	unpack(pack: ArrayBuffer): { name: string, id: number, pkg: { data?: any, error?: any } } {
+	unpack(pack: ArrayBuffer): Package {
 		try {
 			return coder.decode(pack)
 		} catch(error) {
-			console.error(`error during unpack:`, error)
+			throw Error(`error during unpack: ${error}`)
 		}
 	}
 
@@ -76,13 +82,13 @@ export class Wrapper extends Emitter {
 		try {
 			return coder.encode({ name, id, pkg })
 		} catch(error) {
-			console.error(`error during pack:`, error)
+			throw Error(`error during pack: ${error.message}`)
 		}
 	}
 
 	// process external data
 	on(name: string, listener: Function) {
-		super.on(name, async ({ id, data }) => {			
+		super.on(name, async ({ id, data }: any) => {			
 			if (id === null) { return listener(data) }
 			let pack
 			try {
@@ -92,8 +98,7 @@ export class Wrapper extends Emitter {
 				pack = this.pack(ACK_NAME, id, { error })
 			}
 			if (!pack) {
-				console.error(`callback message send failed`)
-				return 
+				throw Error(`callback message send failed`)
 			}
 			this.send(pack)
 		})
@@ -112,21 +117,21 @@ export class Wrapper extends Emitter {
 			const id = this.generateId()
 			const pack = this.pack(name, id, { data })
 			this.send(pack)
-			const callback = (error, data?) => {
+			const callback = (error: Error, data?: any) => {
 				this.callbacks.delete(id)
 				if (error) { return reject(error) }
 				return resolve(data)
 			}
 			this.callbacks.set(id, callback)
 			setTimeout(() => {
-				callback(`emit '${name}' with id '${id}' timeout error`)
+				callback(new Error(`emit '${name}' with id '${id}' timeout error`))
 				this.callbacks.delete(id)
 			}, this.options.callbackTimeout) // if callback is not called after 60s throw error and delete callback
 
 		})
 	}
 
-	private send(pack) {
+	private send(pack: ArrayBuffer) {
 		try {
 			this.init.send(pack)
 		} catch (error) {

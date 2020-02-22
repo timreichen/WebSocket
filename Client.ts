@@ -6,7 +6,7 @@ declare var WebSocket: any
 
 export class Client extends Wrapper {
 	private path: string
-	private protocols: string | string[]
+	private protocols: string | string[] | undefined
 	private first: boolean
 	constructor(path: string, protocols?: string | string[]) {
 		super()
@@ -21,7 +21,7 @@ export class Client extends Wrapper {
 			const ws = new WebSocket(path, protocols)
 			
 			const init = {
-				send: data => {
+				send: (data: any) => {
 					if (ws.readyState === WebSocket.CLOSED) { return }
 					ws.send(data)
 				},
@@ -33,7 +33,7 @@ export class Client extends Wrapper {
 			}
 			this.connect(init)
 			
-			const onmessage = event => this.onmessage(event.data)
+			const onmessage = (event: any) => this.onmessage(event.data)
 			const onopen = () => {
 				ws.addEventListener("message", onmessage)
 				ws.addEventListener("close", onclose)
@@ -47,18 +47,18 @@ export class Client extends Wrapper {
 				this.first = false
 				return resolve()
 			}
-			const onclose = event => {
+			const onclose = (event: Event) => {
 				ws.removeEventListener("message", onmessage)
 				ws.removeEventListener("open", onopen)
 				ws.removeEventListener("close", onclose)
-				ws.removeEventListener("error", error => {
+				ws.removeEventListener("error", (error: Error) => {
 					reject()
 					onerror(error)
 				})
 				this.onclose(event)
 				reject()
 			}
-			const onerror = error => this.onerror(error)
+			const onerror = (error: Error) => this.onerror(error)
 
 			ws.binaryType = "arraybuffer"
 			ws.addEventListener("open", onopen)
